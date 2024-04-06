@@ -330,6 +330,13 @@ class HmiManager():
             raise
 
     #---------------------------------
+    # ConductorControllerへ送信
+    #
+    #---------------------------------
+    def get_controller_comm(self):
+        return self._cntl_comm
+
+    #---------------------------------
     # 指定プログラムにデータを送信する関数
     #
     # @param send_data : 送信データ

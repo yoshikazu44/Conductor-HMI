@@ -13,7 +13,7 @@ from tkinter import ttk, messagebox
 
 import HMIManager
 
-#送信データ
+# ADKへの送信データ
 send_data_infos = ((142, 'ドア開要求',             ('OFF', 'ON'),                0),
                    (143, 'ドア閉要求',             ('OFF', 'ON'),                0),
                    (141, '発車判定要求',           ('OFF', 'ON'),                0),
@@ -36,6 +36,41 @@ recv_data_infos = ((124, 'ドア状態'),           (180, 'ドア作動要求(VC
                    (206, '乗車人数'),           (207, '降車人数'),           (208, '車室内乗客人数')
 )
 
+# ConductorControllerへの送信データ
+#  (DataNo, Name, Select Value, Init Value, Type)
+#   Type = 1:Char, 2:Bool, 3:Long, 4:Double
+conductor_send_data_infos = (
+    (150, 'ドア統合状態',         ('0:未確定', '1:全閉', '2:全開', '3:開作動中', '4:閉作動中', '5:途中停止', '6:反転中'), 0, 1),
+    (151, '車掌状態',             ('0:なし', '1:ドア開判定中', '2:ドア閉判定中', '3:発車判定中', '4:遠隔OP対応中'),  0, 1),
+    (152, 'ドア開要求受付状況',    ('0:ACS要求受付なし', '1:ドア開要求受付', '2:ドア開要求拒絶'), 0, 1),
+    (153, '車掌システム起動状態',  ('0:不定', '1:正常起動中', '2:Sleep'), 0, 1),
+    (154, '車掌システム異常状態',  ('0:正常', '1:ACS_MAINとの通信途絶', '2~:異常'), 0, 1),
+    (155, '車内人数カウント',      'int', 0, 1),
+    (156, '座席１使用状況',        ('0:固定'), 0, 1),
+    (157, '座席２使用状況',        ('0:固定'), 0, 1),
+    (158, '座席３使用状況',        ('0:固定'), 0, 1),
+    (159, '座席４使用状況',        ('0:固定'), 0, 1),
+    (160, '座席５使用状況',        ('0:固定'), 0, 1),
+    (161, '座席６使用状況',        ('0:固定'), 0, 1),
+    (162, 'Fr車いすエリア使用状況', ('0:固定'), 0, 1),
+    (163, 'Rr車いすエリア使用状況', ('0:固定'), 0, 1),
+    (164, '車両シフト状態',        ('0:初期値', '1:P', '2:R:', '3:N', '4:D', '7:Invalid value'), 0, 1),
+    (165, '車速情報',              'int', 0, 1),
+    (166, '車速情報ステータス',     ('0:Normal', '1:Invalid'), 0, 1),
+    (167, '車両モード情報',         ('0:Manual Mode', '1:Autonomous Mode', '2:Stanby Mode'), 0, 1),
+    (168, '車両電源状態',           ('0:初期値', '1:Wake', '2:Driving Mode'), 0, 1),
+    (169, '車内降車要求（降車ボタン状態）',  ('0:OFF', '1:ON', '2:invalid'), 0, 1),
+    (170, '車高(FR)',              'int', 0, 1),
+    (171, '車高(FL)',              'int', 0, 1),
+    (172, '車高(RR)',              'int', 0, 1),
+    (173, '車高(RL)',              'int', 0, 1),
+    (174, '車高センサーステータス(FR)', ('0:Normal', '1:Invalid'), 0, 1),
+    (175, '車高センサーステータス(FL)', ('0:Normal', '1:Invalid'), 0, 1),
+    (176, '車高センサーステータス(RR)', ('0:Normal', '1:Invalid'), 0, 1),
+    (177, '車高センサーステータス(RL)', ('0:Normal', '1:Invalid'), 0, 1),
+)
+
+
 """
 GUIクラス
 
@@ -56,7 +91,7 @@ class VCIBSimuApp():
         #メインウインドウ
         self.main_win = tkinter.Tk()
         self.main_win.title('HMI APP')
-        self.main_win.resizable(width=False, height=False)
+#        self.main_win.resizable(width=False, height=False)
         self.main_win.protocol('WM_DELETE_WINDOW', (lambda:self.quit()))
 
         self.data_label = ttk.Label(self.main_win, text='接続先')
@@ -179,9 +214,21 @@ class VCIBSimuApp():
         self.completed_btn.grid(column=2, row=0, sticky=tkinter.NSEW, padx=5, pady=5)
 
 
+        #############################################
+        # ConductorControler 送信データ領域の作成
+        #############################################
+        
+        self.conductor_send_label = ttk.Label(self.main_win, text='ConductorController送信データ')
+        self.conductor_send_label.grid(column=0, row=8, sticky=tkinter.NW, padx=5)
+
+        self.conductor_send_frm = ttk.Frame(self.main_win, relief='solid')
+        self.conductor_send_frm.grid(column=0, row=9, sticky=tkinter.NSEW, padx=5, pady=5)
+
+        self._init_conductor_send_data_area(self.conductor_send_frm)
+
         #メインフレーム(制御ボタン)
         self.control_frm = ttk.Frame(self.main_win)
-        self.control_frm.grid(column=0, row=8, sticky=tkinter.NSEW, padx=5, pady=10, columnspan=6)
+        self.control_frm.grid(column=0, row=10, sticky=tkinter.NSEW, padx=5, pady=10, columnspan=6)
 
         self.log_btn = ttk.Button(self.control_frm, text='ログ生成', command=lambda:self.split_log())
         self.log_btn.grid(column=2, row=0)
@@ -256,6 +303,36 @@ class VCIBSimuApp():
 
             #print(self.send_data_boxes[0].get())
 
+    # ConductorController送信データのGUI作成
+    def _init_conductor_send_data_area(self, parent):
+        # データをセットするWidget
+        conductor_send_data_widgets : dict[int, Union[ttk.Combobox, ttk.Entry]] = dict()
+
+        for i, send_data_info in enumerate(conductor_send_data_infos):
+            #表示位置の計算
+            tmpRow = i//3
+            tmpCol = (i%3) * 2
+            
+            #ラベルの作成
+            label = ttk.Label(parent, text=send_data_info[1])
+            label.grid(row=tmpRow, column=tmpCol, sticky=tkinter.NSEW, padx=5, pady=5)
+
+            if (send_data_info[2] == 'int'):
+                # 数値入力
+                widget = ttk.Entry(parent)
+                widget.insert(tkinter.END, str(send_data_info[3]))
+
+            else:
+                widget = ttk.Combobox(parent, state="readonly", values=send_data_info[2], width=11)
+                widget.current(send_data_info[3])
+            
+            widget.grid(row=tmpRow, column=(tmpCol + 1), sticky=tkinter.NSEW, padx=5, pady=5)      
+
+            conductor_send_data_widgets[send_data_info[0]] = widget
+
+        # ConductorControllerへの送信
+        conductor_send_btn = ttk.Button(parent, text='ConductorController送信', command=lambda:self.send_conductor(conductor_send_data_widgets))
+        conductor_send_btn.grid(column=5, row=tmpRow+1, padx=5, pady=5)
 
     #--------------------------------------------
     # 指定データNoの初期値を取得する関数
@@ -532,6 +609,41 @@ class VCIBSimuApp():
         else:
         
             messagebox.showerror("Error", "ADKダミーに接続していません")
+
+    #--------------------------------------------
+    # 受信したデータを表示する関数
+    #
+    #--------------------------------------------
+    def send_conductor(self, send_conductor):
+        comm = self.hmi_manager.get_controller_comm()
+
+        if comm.get_connect_flag() == False:
+            # 未接続
+            print("未接続")
+            return
+
+        send_data = list()
+        for i, send_data_info in enumerate(conductor_send_data_infos):
+            data_no = send_data_info[0]
+            widget = send_conductor[data_no]
+            if send_data_info[2] == 'int':
+                value = int(widget.get())
+            else:
+                value = int(widget.current())
+            dtype = send_data_info[4]
+
+            send_data.append({
+                "DataNo": data_no,
+                "DataType": dtype,
+                "Value": value,
+            })
+
+            # 暫定 1024 byte固定で送信するので分割して送信
+            if ((i+1)%20) == 0:
+                comm.send_data(send_data)
+                send_data = list()
+
+        comm.send_data(send_data)
 
 
     #--------------------------------------------
