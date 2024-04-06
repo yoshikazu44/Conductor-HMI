@@ -1,0 +1,15 @@
+﻿{
+	
+	"ADK"          : {
+	                    "Host" : "192.168.1.63",
+	                    "Port" : 30000
+	                 },
+	"Controller"   : {
+	                    "Host" : "192.168.1.63",
+	                    "Port" : 31000
+	                 },
+	"LogFileDir"   : "./Output",
+	"DataFilePath" : "./Templete.csv"
+
+
+}
