@@ -310,8 +310,8 @@ class VCIBSimuApp():
 
         for i, send_data_info in enumerate(conductor_send_data_infos):
             #表示位置の計算
-            tmpRow = i//3
-            tmpCol = (i%3) * 2
+            tmpRow = i//6
+            tmpCol = (i%6) * 2
             
             #ラベルの作成
             label = ttk.Label(parent, text=send_data_info[1])
@@ -332,7 +332,7 @@ class VCIBSimuApp():
 
         # ConductorControllerへの送信
         conductor_send_btn = ttk.Button(parent, text='ConductorController送信', command=lambda:self.send_conductor(conductor_send_data_widgets))
-        conductor_send_btn.grid(column=5, row=tmpRow+1, padx=5, pady=5)
+        conductor_send_btn.grid(column=11, row=tmpRow+1, padx=5, pady=5)
 
     #--------------------------------------------
     # 指定データNoの初期値を取得する関数
