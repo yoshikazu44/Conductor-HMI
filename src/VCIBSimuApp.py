@@ -54,11 +54,11 @@ conductor_send_data_infos = (
     (161, '座席６使用状況',        ('0:固定'), 0, 3),
     (162, 'Fr車いすエリア使用状況', ('0:固定'), 0, 3),
     (163, 'Rr車いすエリア使用状況', ('0:固定'), 0, 3),
-    (164, '車両シフト状態',        ('0:初期値', '1:P', '2:R:', '3:N', '4:D', '7:Invalid value'), 0, 3),
+    (164, '車両シフト状態',        ('0:初期値', '1:P', '2:R', '3:N', '4:D', '5:B', '6:-', '7:Invalid value'), 0, 3),
     (165, '車速情報',              'int', 0, 3),
     (166, '車速情報ステータス',     ('0:Normal', '1:Invalid'), 0, 3),
     (167, '車両モード情報',         ('0:Manual Mode', '1:Autonomous Mode', '2:Stanby Mode'), 0, 3),
-    (168, '車両電源状態',           ('0:初期値', '1:Wake', '2:Driving Mode'), 0, 3),
+    (168, '車両電源状態',           ('0:初期値', '1:-', '2:Wake', '3:-', '4:-', '5:-', '6:Driving Mode'), 0, 3),
     (169, '車内降車要求（降車ボタン状態）',  ('0:OFF', '1:ON', '2:invalid'), 0, 3),
     (170, '車高(FR)',              'int', 0, 3),
     (171, '車高(FL)',              'int', 0, 3),
@@ -654,9 +654,10 @@ class VCIBSimuApp():
 
             # 暫定 1024 byte固定で送信するので分割して送信
             if ((i+1)%20) == 0:
+                # print(send_data)
                 comm.send_data(send_data)
                 send_data = list()
-
+        # print(send_data)
         comm.send_data(send_data)
 
 
