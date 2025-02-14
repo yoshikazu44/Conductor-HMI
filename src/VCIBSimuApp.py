@@ -54,11 +54,11 @@ conductor_send_data_infos = (
     (161, '座席６使用状況',        ('0:固定'), 0, 3),
     (162, 'Fr車いすエリア使用状況', ('0:固定'), 0, 3),
     (163, 'Rr車いすエリア使用状況', ('0:固定'), 0, 3),
-    (164, '車両シフト状態',        ('0:初期値', '1:P', '2:R:', '3:N', '4:D', '7:Invalid value'), 0, 3),
+    (164, '車両シフト状態',        ('0:初期値', '1:P', '2:R', '3:N', '4:D', '5:B', '6:-', '7:Invalid value'), 0, 3),
     (165, '車速情報',              'int', 0, 3),
     (166, '車速情報ステータス',     ('0:Normal', '1:Invalid'), 0, 3),
     (167, '車両モード情報',         ('0:Manual Mode', '1:Autonomous Mode', '2:Stanby Mode'), 0, 3),
-    (168, '車両電源状態',           ('0:初期値', '1:Wake', '2:Driving Mode'), 0, 3),
+    (168, '車両電源状態',           ('0:初期値', '1:-', '2:Wake', '3:-', '4:-', '5:-', '6:Driving Mode'), 0, 3),
     (169, '車内降車要求（降車ボタン状態）',  ('0:OFF', '1:ON', '2:invalid'), 0, 3),
     (170, '車高(FR)',              'int', 0, 3),
     (171, '車高(FL)',              'int', 0, 3),
@@ -114,13 +114,23 @@ class VCIBSimuApp():
         t.setDaemon(True)
         t.start()
 
+        # タブ切り替え
+        notebook = ttk.Notebook(self.main_win)
+        # タブ1: 既存機能
+        tab1 = tkinter.Frame(notebook)
+        notebook.add(tab1, text='既存機能')
+        # タブ2: ACS用
+        tab2 = tkinter.Frame(notebook)
+        notebook.add(tab2, text='ACS')
+        notebook.grid(column=0, row=2, padx=5, pady=5)
+
         #############################
         # 画像ソース選択領域の作成
         #############################
-        self.image_select_label = ttk.Label(self.main_win, text='画像ソース選択')
-        self.image_select_label.grid(column=0, row=2, sticky=tkinter.NW, padx=5)
+        self.image_select_label = ttk.Label(tab1, text='画像ソース選択')
+        self.image_select_label.grid(column=0, row=2, sticky=tkinter.NW, padx=5, pady=5)
 
-        self.image_select_frm = ttk.Frame(self.main_win, relief='solid')
+        self.image_select_frm = ttk.Frame(tab1, relief='solid')
         self.image_select_frm.grid(column=0, row=3, sticky=tkinter.NSEW, padx=5, pady=5)
 
         self.image_select_var = tkinter.IntVar()
@@ -145,10 +155,10 @@ class VCIBSimuApp():
         #############################
         # 送信データ領域の作成
         #############################
-        self.send_label = ttk.Label(self.main_win, text='送信データ')
+        self.send_label = ttk.Label(tab1, text='送信データ')
         self.send_label.grid(column=0, row=4, sticky=tkinter.NW, padx=5)
 
-        self.send_frm = ttk.Frame(self.main_win, relief='solid')
+        self.send_frm = ttk.Frame(tab1, relief='solid')
         self.send_frm.grid(column=0, row=5, sticky=tkinter.NSEW, padx=5, pady=5)
 
         #データパターンの設定
@@ -179,10 +189,10 @@ class VCIBSimuApp():
         #############################
         # 受信データ領域の作成
         #############################
-        self.recv_label = ttk.Label(self.main_win, text='受信データ')
+        self.recv_label = ttk.Label(tab1, text='受信データ')
         self.recv_label.grid(column=0, row=6, sticky=tkinter.SW, padx=5)
 
-        self.recv_frm = ttk.Frame(self.main_win, relief='solid')
+        self.recv_frm = ttk.Frame(tab1, relief='solid')
         self.recv_frm.grid(column=0, row=7, sticky=tkinter.NSEW, padx=5, pady=5)
 
         self.vcib_recv_frm = ttk.LabelFrame(self.recv_frm, relief='solid', text='VCIB')
@@ -214,20 +224,8 @@ class VCIBSimuApp():
         self.completed_btn.grid(column=2, row=0, sticky=tkinter.NSEW, padx=5, pady=5)
 
 
-        #############################################
-        # ConductorControler 送信データ領域の作成
-        #############################################
-        
-        self.conductor_send_label = ttk.Label(self.main_win, text='ConductorController送信データ')
-        self.conductor_send_label.grid(column=0, row=8, sticky=tkinter.NW, padx=5)
-
-        self.conductor_send_frm = ttk.Frame(self.main_win, relief='solid')
-        self.conductor_send_frm.grid(column=0, row=9, sticky=tkinter.NSEW, padx=5, pady=5)
-
-        self._init_conductor_send_data_area(self.conductor_send_frm)
-
         #メインフレーム(制御ボタン)
-        self.control_frm = ttk.Frame(self.main_win)
+        self.control_frm = ttk.Frame(tab1)
         self.control_frm.grid(column=0, row=10, sticky=tkinter.NSEW, padx=5, pady=10, columnspan=6)
 
         self.log_btn = ttk.Button(self.control_frm, text='ログ生成', command=lambda:self.split_log())
@@ -243,6 +241,21 @@ class VCIBSimuApp():
         self.control_frm.columnconfigure(1, weight=1)
         self.control_frm.rowconfigure(0, weight=1)
 
+        #############################################
+        # ConductorControler 送信データ領域の作成
+        #############################################
+        
+        self.conductor_send_label = ttk.Label(tab2, text='ConductorController送信データ')
+        self.conductor_send_label.grid(column=0, row=1, sticky=tkinter.NW, padx=5, pady=5)
+
+        self.conductor_send_frm = ttk.Frame(tab2, relief='solid')
+        self.conductor_send_frm.grid(column=0, row=2, sticky=tkinter.NSEW, padx=5, pady=5)
+
+        conductor_send_data_widgets = self._init_conductor_send_data_area(self.conductor_send_frm)
+
+        # ConductorControllerへの送信
+        conductor_send_btn = ttk.Button(tab2, text='送信', command=lambda:self.send_conductor(conductor_send_data_widgets))
+        conductor_send_btn.grid(row=3, sticky=tkinter.SE, padx=5, pady=5)
 
         self.main_win.mainloop()
 
@@ -305,13 +318,16 @@ class VCIBSimuApp():
 
     # ConductorController送信データのGUI作成
     def _init_conductor_send_data_area(self, parent):
+        # 列数
+        ROW=2
+
         # データをセットするWidget
         conductor_send_data_widgets : dict[int, Union[ttk.Combobox, ttk.Entry]] = dict()
 
         for i, send_data_info in enumerate(conductor_send_data_infos):
             #表示位置の計算
-            tmpRow = i//6
-            tmpCol = (i%6) * 2
+            tmpRow = i//ROW
+            tmpCol = (i%ROW) * 2
             
             #ラベルの作成
             label = ttk.Label(parent, text=send_data_info[1])
@@ -330,9 +346,7 @@ class VCIBSimuApp():
 
             conductor_send_data_widgets[send_data_info[0]] = widget
 
-        # ConductorControllerへの送信
-        conductor_send_btn = ttk.Button(parent, text='ConductorController送信', command=lambda:self.send_conductor(conductor_send_data_widgets))
-        conductor_send_btn.grid(column=11, row=tmpRow+1, padx=5, pady=5)
+        return conductor_send_data_widgets
 
     #--------------------------------------------
     # 指定データNoの初期値を取得する関数
@@ -640,9 +654,10 @@ class VCIBSimuApp():
 
             # 暫定 1024 byte固定で送信するので分割して送信
             if ((i+1)%20) == 0:
+                # print(send_data)
                 comm.send_data(send_data)
                 send_data = list()
-
+        # print(send_data)
         comm.send_data(send_data)
 
 

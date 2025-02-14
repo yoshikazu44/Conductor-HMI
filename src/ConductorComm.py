@@ -215,6 +215,8 @@ class ConductorComm():
     def _recv_data(self):
         
         try:
+            LEN = 18000
+            recv_msg = ''
 
             #if self._recv_flag == False:
             #    self._socket.settimeout(None)
@@ -229,10 +231,18 @@ class ConductorComm():
             
                 try:
                     #車掌機能実験システムからデータを受信する。
-                    recv_msg = self._socket.recv(18000)
-                    #print(recv_msg)
+                    recv_msg1 = self._socket.recv(LEN - len(recv_msg))
+                    if len(recv_msg1) == 0:
+                        #time.sleep(3)   # recv()でブロックしないので待機
+                        continue
+
+                    recv_msg += recv_msg1.decode('UTF-8')
+                    if len(recv_msg) < LEN:
+                        # 全体を受信していない
+                        continue
                     
                     recv_data = json.loads(recv_msg)
+                    recv_msg = ''
                 except socket.timeout:
 
                     if self._recv_flag:
