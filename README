@@ -1,8 +1,33 @@
-HMI ツール
+HMI リリースノート
 
+2025-02-18
 @author imai@nu-soft.jp
 
-ビルド方法
+
+1. 実行プログラム
+
+    - hmi.exe				実行プログラム (Windows 10/11 64bit)
+    - hmi_20_04				実行プログラム (Ubuntu 20.04)
+
+2. 設定ファイル
+
+    - HmiSetting.json			設定ファイル
+    - SignalInfo.txt			信号定義ファイル
+	制御部異常検知の信号(210,211～241) を追加
+    - Templete.csv			送信データのデータパターン定義
+
+3. ソース
+    - Conductor-HMI-master_20250218.zip	プログラム・ソース
+
+4. 実行方法
+    - 準備
+      実行プログラム (hmi.exe または hmi_20_04) および設定ファイルを同一フォルダに配置
+      設定ファイル HmiSetting.json のADKおよび制御部のIPアドレスを設定
+
+    - 実行
+      ターミナルやファイルエクスプローラで実行プログラムを実行
+
+5. ビルド方法
   Windows:      pyinstaller --onefile --name hmi ./src/VCIBSimuApp.py
   Ubuntu 20.04: pyinstaller --onefile --name hmi ./src/VCIBSimuApp.py
     *** 仮想環境 (source venv/bin/activate) で実行すること ***
@@ -12,9 +37,7 @@ HMI ツール
 
 開発環境・実行環境
   Windows 11, Python3 (3.11)
-  Ubuntu 22.04, Python (3.11)
   Ubuntu 20.04, Python (3.11)
-
 
 Ubuntu 20.04 環境
  Python3.11インストール
