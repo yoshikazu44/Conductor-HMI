@@ -1,0 +1,28 @@
+HMI ツール
+
+@author imai@nu-soft.jp
+
+ビルド方法
+  Windows:      pyinstaller --onefile --name hmi ./src/VCIBSimuApp.py
+  Ubuntu 20.04: pyinstaller --onefile --name hmi ./src/VCIBSimuApp.py
+    *** 仮想環境 (source venv/bin/activate) で実行すること ***
+
+  実行ファイル: dist/hmi  (Windowsは hmi.exe)
+  pyinstallerがない場合は、pip install pyinstllar 
+
+開発環境・実行環境
+  Windows 11, Python3 (3.11)
+  Ubuntu 22.04, Python (3.11)
+  Ubuntu 20.04, Python (3.11)
+
+
+Ubuntu 20.04 環境
+ Python3.11インストール
+  sudo apt update
+  sudo apt install -y software-properties-common
+  sudo add-apt-repository -y ppa:deadsnakes/ppa
+  sudo apt update
+  sudo apt install -y python3.11 python3.11-venv python3.11-dev
+  sudo apt install --reinstall python3.11-venv
+  sudo apt install python3-tk
+  sudo apt install python3-pil python3-pil.imagetk
