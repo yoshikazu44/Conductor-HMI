@@ -357,6 +357,9 @@ class HmiManager():
         except BaseException as e:
             raise
 
+    def adk_signal_name(self, data_no):
+        return self._adk_comm._log_manager.signal_name(data_no)
+    
 #-------------------------------------------
 # メイン関数(テスト用)
 #-------------------------------------------

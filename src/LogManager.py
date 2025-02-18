@@ -25,6 +25,9 @@ class LogManager():
         self._signal_info      = list()
         self._log_file         = None
 
+        # DataNo → 信号名
+        self._singal_name      = {}
+
         #ログファイルを作成し、ファイルをオープンする。
         #出力先フォルダが存在していなければ作成する
         os.makedirs(self._output_path, exist_ok=True)
@@ -66,11 +69,14 @@ class LogManager():
             for signal_info in signal_infos:
             
                 #信号名とデータNoを取得する。
-                signal_name = signal_info[1]
-                data_no     = int(signal_info[2])
+                signal_name = signal_info[0]
+                data_no     = int(signal_info[1])
             
                 #信号名とデータNoをセットとしてリストに追加する。
                 self._signal_info.append((signal_name, data_no,))
+
+                # DataNo → 信号名
+                self._singal_name[data_no] = signal_name
         
 
     #---------------------------------
@@ -123,7 +129,10 @@ class LogManager():
 
         self._log_file.write("\n")
         #print("")
-	
+
+    # DataNo → 信号名
+    def signal_name(self, data_no):
+        return self._singal_name[data_no]
 
 #-------------------------------------------
 # メイン関数(テスト用)

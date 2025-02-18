@@ -36,6 +36,13 @@ recv_data_infos = ((124, 'ドア状態'),           (180, 'ドア作動要求(VC
                    (206, '乗車人数'),           (207, '降車人数'),           (208, '車室内乗客人数')
 )
 
+#受信データ(制御部異常検知)
+# エラーコード
+func_error_code = 210
+
+# エラーDataNo (min, max)
+func_error_datano = (211, 241)
+
 # ConductorControllerへの送信データ
 #  (DataNo, Name, Select Value, Init Value, Type)
 #   Type = 1:Char, 2:Bool, 3:Int, 4:Double   整数で送るので 1byteでも3:Intにする
@@ -207,6 +214,35 @@ class VCIBSimuApp():
         self.recv_data_boxes : dict[int, ttk.Entry] = dict()
         self._init_recv_data_area(self.vcib_recv_frm, vcib_recv_data_infos)
         self._init_recv_data_area(self.image_recv_frm, recv_data_infos)
+
+        # 制御部異常通知
+        func_info_frm = ttk.LabelFrame(self.recv_frm, relief='solid', text='制御部異常通知')
+        func_info_frm.pack(anchor=tkinter.NW, padx=5, pady=5, fill=tkinter.X, expand=True)
+
+        errcode_frm = ttk.Frame(func_info_frm)
+        errcode_frm.grid(column=0, row=0, sticky=tkinter.NW, padx=5, pady=5)
+        errcode_label = ttk.Label(errcode_frm, text='エラーコード')
+        errcode_label.grid(column=0, row=0, sticky=tkinter.W, padx=5, pady=5)
+        self.errcode_value = ttk.Entry(errcode_frm, text="FFFFFFFF", width=12)
+        self.errcode_value.grid(column=1, row=0, sticky=tkinter.W, padx=5, pady=5)
+
+        # Treeview（エラー一覧）
+        err_list_frm = ttk.Frame(func_info_frm)
+        err_list_frm.grid(column=0, row=1, columnspan=2, sticky=tkinter.NSEW, padx=5, pady=5)
+        self.err_list = ttk.Treeview(err_list_frm, columns=("Value"), show="headings", height=4)
+        self.err_list.heading("Value", text="エラー内容")
+        self.err_list.grid(column=0, row=0, columnspan=6, sticky=tkinter.NSEW, padx=5, pady=5)
+
+        # スクロールバー（Treeviewの右側に配置）
+        scrollbar = ttk.Scrollbar(err_list_frm, orient="vertical", command=self.err_list.yview)
+        self.err_list.configure(yscroll=scrollbar.set)
+        scrollbar.grid(column=1, row=0, sticky=tkinter.NS, padx=5, pady=5)
+
+        func_info_frm.columnconfigure(0, weight=1)
+        func_info_frm.rowconfigure(1, weight=1)
+        err_list_frm.columnconfigure(0, weight=1)
+        err_list_frm.rowconfigure(0, weight=1)
+
 
         # 遠隔OP領域の作成
         self.remote_op_frm = ttk.LabelFrame(self.recv_frm, relief='solid', text='遠隔OP')
@@ -676,6 +712,9 @@ class VCIBSimuApp():
 
             recv_datas = self.hmi_manager.get_recv_data()
 
+            # 制御部異常通知 エラー内容のリストを一旦クリア
+
+            err_datanos = []
             for data_no, value in recv_datas:
 
                 #受信データ表示領域に存在するデータNoの場合
@@ -688,7 +727,30 @@ class VCIBSimuApp():
                     else:
                         self.recv_data_boxes[data_no].insert(0, value)
 
-            #print("Recv")
+                # 制御部異常通知 エラーコード
+                if data_no == func_error_code:
+                    self.errcode_value.delete(0, "end")
+                    self.errcode_value.insert(0, "0x{:08x}".format(value))
+                # 制御部異常通知 エラー内容
+                if func_error_datano[0] <= data_no and data_no <= func_error_datano[1]:
+                    if value != 0:
+                        err_datanos.append(data_no)
+
+            # 制御部異常通知 エラー内容のリストを更新
+            items = self.err_list.get_children()
+            for i in range(len(err_datanos)):
+                err_text = self.hmi_manager.adk_signal_name(err_datanos[i])
+                if i < len(items):
+                    # 既に表示されている行を更新            
+                    item = items[i]
+                    self.err_list.item(item, values=(err_text))
+                else:
+                    # 不足している行を追加
+                    self.err_list.insert("", tkinter.END, values=(err_text))
+            # 不要な行を削除
+            for i in range(len(err_datanos), len(items)):
+                self.err_list.delete(items[i])
+            
             #1秒待機  
             ed_time = time.perf_counter()
             time.sleep(1 - (ed_time - st_time))
