@@ -114,8 +114,12 @@ class VCIBSimuApp():
         self.connect_status_adk.configure('connadk.TLabel',   background = 'red')
         self.connect_status_cntl = ttk.Style()
         self.connect_status_cntl.configure('conncntl.TLabel', background = 'red')
-        self._init_connect_info(self.connect_frm, 0, self.hmi_manager._adk_ipaddress,  self.hmi_manager._adk_port, 'connadk.TLabel')
-        self._init_connect_info(self.connect_frm, 1, self.hmi_manager._cntl_ipaddress, self.hmi_manager._cntl_port, 'conncntl.TLabel')
+        connect_frm_adk = ttk.Frame(self.connect_frm)
+        connect_frm_adk.grid(column=0, row=0, sticky=tkinter.NW, padx=5, pady=5)
+        connect_frm_ctrl = ttk.Frame(self.connect_frm)
+        connect_frm_ctrl.grid(column=1, row=0, sticky=tkinter.NW, padx=(20, 5), pady=5)
+        self._init_connect_info(connect_frm_adk, "ADKダミー", self.hmi_manager._adk_ipaddress,  self.hmi_manager._adk_port, 'connadk.TLabel')
+        self._init_connect_info(connect_frm_ctrl, "制御部", self.hmi_manager._cntl_ipaddress, self.hmi_manager._cntl_port, 'conncntl.TLabel')
 
         t = threading.Thread(target=self.check_connect)
         t.setDaemon(True)
@@ -220,18 +224,18 @@ class VCIBSimuApp():
         func_info_frm.pack(anchor=tkinter.NW, padx=5, pady=5, fill=tkinter.X, expand=True)
 
         errcode_frm = ttk.Frame(func_info_frm)
-        errcode_frm.grid(column=0, row=0, sticky=tkinter.NW, padx=5, pady=5)
+        errcode_frm.grid(column=0, row=0, sticky=tkinter.NW, padx=5)
         errcode_label = ttk.Label(errcode_frm, text='エラーコード')
-        errcode_label.grid(column=0, row=0, sticky=tkinter.W, padx=5, pady=5)
+        errcode_label.grid(column=0, row=0, sticky=tkinter.W, padx=5)
         self.errcode_value = ttk.Entry(errcode_frm, text="FFFFFFFF", width=12)
-        self.errcode_value.grid(column=1, row=0, sticky=tkinter.W, padx=5, pady=5)
+        self.errcode_value.grid(column=1, row=0, sticky=tkinter.W, padx=5)
 
         # Treeview（エラー一覧）
         err_list_frm = ttk.Frame(func_info_frm)
-        err_list_frm.grid(column=0, row=1, columnspan=2, sticky=tkinter.NSEW, padx=5, pady=5)
+        err_list_frm.grid(column=0, row=1, columnspan=2, sticky=tkinter.NSEW, padx=5, pady=3)
         self.err_list = ttk.Treeview(err_list_frm, columns=("Value"), show="headings", height=4)
         self.err_list.heading("Value", text="エラー内容")
-        self.err_list.grid(column=0, row=0, columnspan=6, sticky=tkinter.NSEW, padx=5, pady=5)
+        self.err_list.grid(column=0, row=0, columnspan=6, sticky=tkinter.NSEW, padx=5, pady=3)
 
         # スクロールバー（Treeviewの右側に配置）
         scrollbar = ttk.Scrollbar(err_list_frm, orient="vertical", command=self.err_list.yview)
@@ -246,18 +250,17 @@ class VCIBSimuApp():
 
         # 遠隔OP領域の作成
         self.remote_op_frm = ttk.LabelFrame(self.recv_frm, relief='solid', text='遠隔OP')
-        #self.remote_op_frm.grid(column=0, row=2, sticky=tkinter.NW, padx=5, pady=5)
         self.remote_op_frm.pack(anchor=tkinter.NW, padx=5, pady=5)
 
         self.remote_op_state_label = ttk.Label(self.remote_op_frm, text='遠隔OP状態')
-        self.remote_op_state_label.grid(column=0, row=0, sticky=tkinter.NSEW, padx=5, pady=5)
+        self.remote_op_state_label.grid(column=0, row=0, sticky=tkinter.NSEW, padx=5, pady=3)
 
         self.remote_op_state = ttk.Entry(self.remote_op_frm, width=12)
         self.remote_op_state.insert(0, "非対応中")
-        self.remote_op_state.grid(column=1, row=0, sticky=tkinter.NSEW, padx=5, pady=5)
+        self.remote_op_state.grid(column=1, row=0, sticky=tkinter.NSEW, padx=5, pady=3)
 
         self.completed_btn = ttk.Button(self.remote_op_frm, text="操作完了", command=lambda:self.send_remote_op())
-        self.completed_btn.grid(column=2, row=0, sticky=tkinter.NSEW, padx=5, pady=5)
+        self.completed_btn.grid(column=2, row=0, sticky=tkinter.NSEW, padx=5, pady=3)
 
 
         #メインフレーム(制御ボタン)
@@ -300,21 +303,16 @@ class VCIBSimuApp():
     # 接続先領域を作成する関数
     #
     #--------------------------------------------
-    def _init_connect_info(self, parent, row_num, ipaddress, port, label):
+    def _init_connect_info(self, parent, name, ipaddress, port, label):
 
-        names = ["ADKダミー", "制御部"]
-
-        if row_num >= len(names):
-            return
-
-        self.connect_name = ttk.Label(parent, text=names[row_num])
-        self.connect_name.grid(column=0, row=row_num, sticky=tkinter.EW, padx=5, pady=5)
+        self.connect_name = ttk.Label(parent, text=name)
+        self.connect_name.grid(column=0, row=0, sticky=tkinter.EW, padx=5, pady=5)
 
         self.connect_info = ttk.Label(parent, text="[{}:{}]".format(ipaddress, port))
-        self.connect_info.grid(column=1, row=row_num, sticky=tkinter.EW, padx=5, pady=5)
+        self.connect_info.grid(column=1, row=0, sticky=tkinter.EW, padx=5, pady=5)
         
         self.connect_cond = ttk.Label(parent, text="   ", relief='solid', style= label)
-        self.connect_cond.grid(column=2, row=row_num, sticky=tkinter.NSEW, padx=5, pady=5)
+        self.connect_cond.grid(column=2, row=0, sticky=tkinter.NSEW, padx=5, pady=5)
 
     #--------------------------------------------
     # 送信データ領域を作成する関数
